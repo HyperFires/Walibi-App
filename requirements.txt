@@ -1,0 +1,10 @@
+streamlit
+requests
+beautifulsoup4
+pytz
+folium
+streamlit-folium
+altair
+folium
+pandas
+wikipedia
