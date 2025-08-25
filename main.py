@@ -10,26 +10,34 @@ import folium
 from streamlit_folium import st_folium
 import re 
 
+
 def get_wait_times():
     url = "https://www.looopings.nl/wachten/walibiholland"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     attractions = {}
+
     for row in soup.select("tr"):
         cols = row.find_all("td")
         if len(cols) >= 2:
             name = cols[0].text.strip()
-            status = cols[1].text.strip()
-            status_lower = status.lower()
+            status_raw = cols[1].text.strip()
+            status_lower = status_raw.lower()
 
+            # Detect known statuses
             if "gesloten" in status_lower or "closed" in status_lower:
                 attractions[name] = {"wait": None, "status": "closed"}
+            elif "onderhoud" in status_lower:
+                attractions[name] = {"wait": None, "status": "maintenance"}
+            elif "storing" in status_lower:
+                attractions[name] = {"wait": None, "status": "breakdown"}
             else:
-                try:
-                    wait_time = int(status.replace(" min", "").strip())
+                # Try to extract wait time like "5", "10 min", etc.
+                match = re.search(r"(\d+)", status_raw)
+                if match:
+                    wait_time = int(match.group(1))
                     attractions[name] = {"wait": wait_time, "status": "open"}
-                except:
-                    # Could be "Storing", "Niet beschikbaar", etc.
+                else:
                     attractions[name] = {"wait": None, "status": "unknown"}
     return attractions
 
@@ -115,9 +123,13 @@ def fetch_historical_wait_times(park_id=53):
             })
     return pd.DataFrame(records)
 
-def wait_time_color(wait):
-    if wait is None:
+def wait_time_color(wait, status=None):
+    if status == "maintenance":
         return "gray"
+    elif status == "breakdown":
+        return "#2a0000"
+    elif wait is None:
+        return "#FFFDD0"
     elif wait <= 10:
         return "green"          
     elif wait < 20:
@@ -397,20 +409,25 @@ with tab1:
 
     # ---- Show closed rides for transparency ----
     closed_rides = [
-        ride for ride in TARGET_RIDES
-        if wait_data.get(ride, {}).get("status") == "closed"
-    ]
+    ride for ride in TARGET_RIDES
+    if wait_data.get(ride, {}).get("status") in ["closed", "maintenance", "breakdown"]
+]
 
 
-    if closed_rides:
-        st.markdown("### 🚫 Closed Rides")
-        for ride in closed_rides:
-            tag = ride_tags.get(ride, "Unknown")
-            emoji = "💦" if tag == "Water" else "🎢" if tag == "Thrill" else "🧘" if tag == "Chill" else "❔"
-            st.markdown(
-                f"- **{ride}** {emoji} &nbsp;&nbsp;<span style='color:red;'>[CLOSED]</span>",
-                unsafe_allow_html=True
-            )
+    status_display = {
+    "closed": ("🔴", "Closed"),
+    "maintenance": ("🔧", "Maintenance"),
+    "breakdown": ("⚠️", "Storing"),
+}
+
+    for ride in closed_rides:
+        status = wait_data.get(ride, {}).get("status", "unknown")
+        emoji, label = status_display.get(status, ("❔", status))
+        st.markdown(
+            f"- **{ride}** {emoji} &nbsp;&nbsp;<span style='color:red;'>[{label.upper()}]</span>",
+            unsafe_allow_html=True
+        )
+
     
     # Filter alleen rides met coördinaten
     valid_rides = {r: loc for r, loc in ride_locations.items() if loc != "TBD"}
@@ -449,7 +466,7 @@ with tab1:
             popup=popup,
             icon=folium.DivIcon(html=f"""
                 <div style="
-                    background-color: {wait_time_color(wait)};
+                    background-color: {wait_time_color(wait, status)};
                     color: white;
                     padding: 6px 10px;
                     min-width: 32px;
@@ -498,8 +515,12 @@ with tab2:
             display = f"🟢 {wait} min" if wait is not None else "🟢 Unknown"
         elif status == "closed":
             display = "🔴 Closed"
+        elif status == "maintenance":
+            display = "🔧 Maintenance"
+        elif status == "breakdown":
+            display = "⚠️ Storing"
         else:
-            display = "⚠️ Unknown"
+            display = "❔ Unknown"
 
         ride_table.append({
             "Attraction": ride,
