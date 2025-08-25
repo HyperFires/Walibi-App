@@ -599,7 +599,7 @@ with tab3:
     }
 
     st.subheader("🎡 Kies een attractie voor meer info")
-    keuze = st.selectbox("Attractie", list(ride_wiki_titles.keys()))
+    keuze = st.selectbox("Attractie", sorted(ride_wiki_titles.keys()))
 
     wiki_title = ride_wiki_titles.get(keuze)
 
