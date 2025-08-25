@@ -144,41 +144,40 @@ def wait_time_color(wait, status=None):
 
 def get_full_wikipedia_text(title: str, max_paragraphs: int = 15) -> str:
     url = f"https://nl.wikipedia.org/wiki/{title}"
-    response = requests.get(url)
+    try:
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
 
-    if response.status_code != 200:
-        return "⚠️ Wikipedia-pagina kon niet worden opgehaald."
+        if response.status_code != 200:
+            return f"⚠️ Wikipedia-pagina kon niet worden opgehaald. Statuscode: {response.status_code}"
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    content = soup.find("div", {"id": "mw-content-text"})
+        soup = BeautifulSoup(response.text, "html.parser")
+        content = soup.find("div", {"id": "mw-content-text"})
 
-    if not content:
-        return "⚠️ Geen geschikte tekst gevonden op de pagina."
+        if not content:
+            return "⚠️ Geen geschikte tekst gevonden op de pagina."
 
-    # Haal alle paragrafen op binnen de hoofdinhoud
-    paragraphs = content.find_all("p")
-    clean_paragraphs = []
+        paragraphs = content.find_all("p")
+        clean_paragraphs = []
 
-    for p in paragraphs:
-        text = p.get_text().strip()
+        for p in paragraphs:
+            text = p.get_text().strip()
+            text = re.sub(r'\[\d+\]', '', text)
+            text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
 
-        # Verwijder referenties zoals [1], [2], etc.
-        text = re.sub(r'\[\d+\]', '', text)
+            if len(text) > 50:
+                clean_paragraphs.append(text)
 
-        # Herstel spaties tussen woorden die aan elkaar geplakt waren
-        text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
+            if len(clean_paragraphs) >= max_paragraphs:
+                break
 
-        # Voeg alleen zinnige paragrafen toe
-        if len(text) > 50:
-            clean_paragraphs.append(text)
+        if not clean_paragraphs:
+            return "⚠️ Geen geschikte tekst gevonden op de pagina."
 
-        if len(clean_paragraphs) >= max_paragraphs:
-            break
+        return "\n\n".join(clean_paragraphs)
 
-    if not clean_paragraphs:
-        return "⚠️ Geen geschikte tekst gevonden op de pagina."
+    except Exception as e:
+        return f"⚠️ Er is een fout opgetreden bij het ophalen: {e}"
 
-    return "\n\n".join(clean_paragraphs)
 
 # ---- Score formula ----
 def score(wait_time, walk_time, user_score):
