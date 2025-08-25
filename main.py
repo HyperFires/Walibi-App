@@ -501,7 +501,7 @@ with tab2:
     # Sort option dropdown
     sort_option = st.selectbox(
         "📊 Sort Attractions based on:",
-        ["Alphabeticaldfd", "Wait time (low to high)", "Wait time (high to low)", "Status"]
+        ["Alphabetical", "Wait time (low to high)", "Wait time (high to low)", "Status"]
     )
 
     ride_table = []
