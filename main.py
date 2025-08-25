@@ -461,16 +461,16 @@ with tab1:
         popup = "<br>".join(popup_lines)
 
         if wait is not None:
-        wait_text = f"{wait}m"
-    else:
-        if status == "closed":
-            wait_text = "❌"
-        elif status == "maintenance":
-            wait_text = "🔧"
-        elif status == "breakdown":
-            wait_text = "⚠️"
+            wait_text = f"{wait}m"
         else:
-            wait_text = "?"
+            if status == "closed":
+                wait_text = "❌"
+            elif status == "maintenance":
+                wait_text = "🔧"
+            elif status == "breakdown":
+                wait_text = "⚠️"
+            else:
+                wait_text = "?"
 
         # Het rode uitroepteken is hier verwijderd
 
