@@ -411,17 +411,21 @@ with tab1:
         st.warning("No rides fit your limits.")
 
     # ---- Show closed rides for transparency ----
+# ---- Show closed rides for transparency ----
     closed_rides = [
     ride for ride in TARGET_RIDES
     if wait_data.get(ride, {}).get("status") in ["closed", "maintenance", "breakdown"]
 ]
 
+    if closed_rides:
+        st.markdown("___")  # Dubbele lijnscheiding
+        st.markdown("### ❌ Gesloten of niet-beschikbare attracties")
 
     status_display = {
-    "closed": ("🔴", "Closed"),
-    "maintenance": ("🔧", "Maintenance"),
-    "breakdown": ("⚠️", "Storing"),
-}
+        "closed": ("🔴", "Closed"),
+        "maintenance": ("🔧", "Maintenance"),
+        "breakdown": ("⚠️", "Storing"),
+    }
 
     for ride in closed_rides:
         status = wait_data.get(ride, {}).get("status", "unknown")
@@ -430,6 +434,7 @@ with tab1:
             f"- **{ride}** {emoji} &nbsp;&nbsp;<span style='color:red;'>[{label.upper()}]</span>",
             unsafe_allow_html=True
         )
+
 
     
     # Filter alleen rides met coördinaten
