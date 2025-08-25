@@ -419,7 +419,7 @@ with tab1:
 
     if closed_rides:
         st.markdown("___")  # Dubbele lijnscheiding
-        st.markdown("### ❌ Gesloten of niet-beschikbare attracties")
+        st.markdown("### ❌ Closed or not-available rides")
 
     status_display = {
         "closed": ("🔴", "Closed"),
