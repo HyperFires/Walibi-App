@@ -19,15 +19,17 @@ def get_wait_times():
 
     for row in soup.select("tr"):
         cols = row.find_all("td")
-        if len(cols) >= 2:
+        if len(cols) >= 3:
             name = cols[0].text.strip()
-            status_td = cols[1]
+            wait_td = cols[1]
+            status_td = cols[2]  # <-- hier de fix
+
             status_text = status_td.text.strip()
             status_class = status_td.get("class", [])
 
             if "state_1" in status_class:
                 # Attractie is open – probeer wachttijd te extraheren
-                match = re.search(r"(\d+)", status_text)
+                match = re.search(r"(\d+)", wait_td.text.strip())
                 wait_time = int(match.group(1)) if match else 0
                 attractions[name] = {"wait": wait_time, "status": "open"}
             elif "state_2" in status_class:
@@ -40,6 +42,7 @@ def get_wait_times():
                 attractions[name] = {"wait": None, "status": "unknown"}
 
     return attractions
+
 
 def get_opening_hours():
     url = "https://www.looopings.nl/wachten/walibiholland"
