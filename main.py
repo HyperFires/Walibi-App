@@ -268,7 +268,7 @@ with tab1:
         st.warning("No thrill rides are currently open.")
     
 
-    current_ride = st.selectbox("🎡 Which ride did you just exit?", open_rides)
+    current_ride = st.selectbox("🎡 Which ride did you just exit?", sorted(open_rides))
 
     max_wait = st.slider("⏳ Max wait time (min)", 0, 120, 45, help="Maximale wachttijd die je bereid bent te accepteren")
     max_walk = st.slider("🚶 Max walking time (min)", 0, 20, 10, help="Maximale loopafstand tussen attracties in minuten")
@@ -343,7 +343,7 @@ with tab1:
 
 
     ride_scores = {}
-    for ride in open_rides:
+    for ride in sorted(open_rides):
         wait = wait_data[ride]["wait"]
         wait_display = f"⏱️ {wait} min" if wait is not None else "⏱️ onbekend"
 
