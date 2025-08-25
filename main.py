@@ -129,7 +129,7 @@ def wait_time_color(wait, status=None):
     elif status == "breakdown":
         return "#2a0000"
     elif wait is None:
-        return "#FFFDD0"
+        return "#FF1493"
     elif wait <= 10:
         return "green"          
     elif wait < 20:
