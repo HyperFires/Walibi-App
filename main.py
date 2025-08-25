@@ -21,24 +21,24 @@ def get_wait_times():
         cols = row.find_all("td")
         if len(cols) >= 2:
             name = cols[0].text.strip()
-            status_raw = cols[1].text.strip()
-            status_lower = status_raw.lower()
+            status_td = cols[1]
+            status_text = status_td.text.strip()
+            status_class = status_td.get("class", [])
 
-            # Detect known statuses
-            if "gesloten" in status_lower or "closed" in status_lower:
+            if "state_1" in status_class:
+                # Attractie is open – probeer wachttijd te extraheren
+                match = re.search(r"(\d+)", status_text)
+                wait_time = int(match.group(1)) if match else 0
+                attractions[name] = {"wait": wait_time, "status": "open"}
+            elif "state_2" in status_class:
                 attractions[name] = {"wait": None, "status": "closed"}
-            elif "onderhoud" in status_lower:
-                attractions[name] = {"wait": None, "status": "maintenance"}
-            elif "storing" in status_lower:
+            elif "state_3" in status_class:
                 attractions[name] = {"wait": None, "status": "breakdown"}
+            elif "state_4" in status_class:
+                attractions[name] = {"wait": None, "status": "maintenance"}
             else:
-                # Try to extract wait time like "5", "10 min", etc.
-                match = re.search(r"(\d+)", status_raw)
-                if match:
-                    wait_time = int(match.group(1))
-                    attractions[name] = {"wait": wait_time, "status": "open"}
-                else:
-                    attractions[name] = {"wait": None, "status": "unknown"}
+                attractions[name] = {"wait": None, "status": "unknown"}
+
     return attractions
 
 def get_opening_hours():
